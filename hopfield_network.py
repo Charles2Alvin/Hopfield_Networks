@@ -8,7 +8,7 @@ class HopfieldNetwork:
     def train(self, X: np.ndarray):
         M, N = len(X), len(X[0])
         self.W = (1 / N) * X.dot(X.T)
-        np.fill_diagonal(self.W, 0)
+        # np.fill_diagonal(self.W, 0)
 
     def print_W(self):
         for i in range(self.W.shape[0]):
@@ -37,21 +37,41 @@ class HopfieldNetwork:
                     cnt += 1
                 # print(i, value_old, value_new, self.W[:, i].dot(V))
             if cnt == 0:
-                print("Converged in %s iterations" % iter)
+                #print("Converged in %s iterations" % iter)
                 break
             iter += 1
 
         return V
 
 
-x1 = np.array([-1, -1, 1, -1, 1, -1, -1, 1])
+x1 = [-1, -1, 1, -1, 1, -1, -1, 1]
 x2 = [-1, -1, -1, -1, -1, 1, -1, -1]
 x3 = [-1, 1, 1, -1, -1, 1, -1, 1]
 
 X = np.array([x1, x2, x3]).T
 model = HopfieldNetwork()
 model.train(X)
-print(model.update(x1))
-print(np.equal(x1, model.update(x1)))
-print((x1 == model.update(x1)).all())
+# print(model.update(x1))
+# print(np.equal(x1, model.update(x1)))
+# print((x1 == model.update(x1)).all())
+
+# all possible pattern 8-neuron
+N = 8
+k = 2 ** N
+print('2^N=', k)
+rp = np.ones([k, N])
+
+for i in range(k):
+    l = len(bin(i)) - 2
+    for j in range(l):
+        if bin(i)[j + 2] == '1':
+            rp[i, N - l + j] = -1
+
+n = 0
+for i in range(k):
+    A = np.copy(rp[i])
+    B = model.update(rp[i])
+    if ((A==B).all())==True:
+        n+=1
+        print('attractor',n,':',A)
 

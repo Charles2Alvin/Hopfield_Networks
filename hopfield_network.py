@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 
 class HopfieldNetwork:
@@ -44,43 +45,18 @@ class HopfieldNetwork:
         return V
 
 
-x1 = [-1, -1, 1, -1, 1, -1, -1, 1]
-x2 = [-1, -1, -1, -1, -1, 1, -1, -1]
-x3 = [-1, 1, 1, -1, -1, 1, -1, 1]
+f = open("pict.dat")
+raw_data = f.read().split(',')
+length = len(raw_data)
+N = int(length / 1024)
+data = np.zeros((1024, N))
+for i in range(length):
+    raw_data[i] = float(raw_data[i])
+data = np.array(raw_data).reshape((N, 1024))
+p1, p2, p3 = data[0], data[1], data[2]
 
-X = np.array([x1, x2, x3]).T
+X = np.array([p1, p2, p3]).T
 model = HopfieldNetwork()
 model.train(X)
-
-x1d = np.array([1, -1, 1, -1, 1, -1, -1, 1])
-x2d = np.array([1, 1, -1, -1, -1, 1, -1, -1])
-x3d = np.array([1, 1, 1, -1, 1, 1, -1, 1])
-rp1 = model.update(x1d)
-print(rp1)
-print((rp1 == x1).all())
-rp2 = model.update(x2d)
-print(rp2)
-print((rp2 == x2).all())
-rp3 = model.update(x3d)
-print(rp3)
-print((rp3 == x3).all())
-
-# all possible pattern 8-neuron
-N = 8
-k = 2 ** N
-print('2^N=', k)
-rp = np.ones([k, N])
-
-for i in range(k):
-    l = len(bin(i)) - 2
-    for j in range(l):
-        if bin(i)[j + 2] == '1':
-            rp[i, N - l + j] = -1
-
-n = 0
-for i in range(k):
-    A = rp[i]
-    B = model.update(A)
-    if (A == B).all():
-        n += 1
-        print('attractor', n, ':', A)
+rp1 = model.update(p1)
+print((rp1 == p1).all())

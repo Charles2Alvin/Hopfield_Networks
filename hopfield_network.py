@@ -16,13 +16,14 @@ class HopfieldNetwork:
                 print("%.1f  \t" % (self.W[i][j]),  end='')
             print()
 
-    def update(self, V):
+    def update(self, p_start):
         """
         Apply the update rule on the input pattern V to get the restored pattern
         which is an attractor in the network's storage
-        :param V: the start pattern
+        :param p_start: the start pattern
         :return: the restored pattern
         """
+        V = np.copy(p_start)
         m = len(V)
         indices = [i for i in range(m)]
         iter = 1
@@ -37,7 +38,7 @@ class HopfieldNetwork:
                     cnt += 1
                 # print(i, value_old, value_new, self.W[:, i].dot(V))
             if cnt == 0:
-                #print("Converged in %s iterations" % iter)
+                # print("Converged in %s iterations" % iter)
                 break
             iter += 1
 
@@ -51,9 +52,6 @@ x3 = [-1, 1, 1, -1, -1, 1, -1, 1]
 X = np.array([x1, x2, x3]).T
 model = HopfieldNetwork()
 model.train(X)
-# print(model.update(x1))
-# print(np.equal(x1, model.update(x1)))
-# print((x1 == model.update(x1)).all())
 
 # all possible pattern 8-neuron
 N = 8
@@ -69,9 +67,8 @@ for i in range(k):
 
 n = 0
 for i in range(k):
-    A = np.copy(rp[i])
-    B = model.update(rp[i])
-    if ((A==B).all())==True:
-        n+=1
-        print('attractor',n,':',A)
-
+    A = rp[i]
+    B = model.update(A)
+    if (A == B).all():
+        n += 1
+        print('attractor', n, ':', A)

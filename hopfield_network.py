@@ -8,7 +8,7 @@ class HopfieldNetwork:
     def train(self, X: np.ndarray):
         M, N = len(X), len(X[0])
         self.W = (1 / N) * X.dot(X.T)
-        # np.fill_diagonal(self.W, 0)
+        np.fill_diagonal(self.W, 0)
 
     def print_W(self):
         for i in range(self.W.shape[0]):

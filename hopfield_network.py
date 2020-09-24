@@ -29,7 +29,6 @@ class HopfieldNetwork:
         iter = 1
         while True:
             cnt = 0
-            indices = np.random.permutation(indices)
             for i in indices:
                 value_old = V[i]
                 value_new = np.sign(self.W[:, i].dot(V))
@@ -52,6 +51,19 @@ x3 = [-1, 1, 1, -1, -1, 1, -1, 1]
 X = np.array([x1, x2, x3]).T
 model = HopfieldNetwork()
 model.train(X)
+
+x1d = np.array([1, -1, 1, -1, 1, -1, -1, 1])
+x2d = np.array([1, 1, -1, -1, -1, 1, -1, -1])
+x3d = np.array([1, 1, 1, -1, 1, 1, -1, 1])
+rp1 = model.update(x1d)
+print(rp1)
+print((rp1 == x1).all())
+rp2 = model.update(x2d)
+print(rp2)
+print((rp2 == x2).all())
+rp3 = model.update(x3d)
+print(rp3)
+print((rp3 == x3).all())
 
 # all possible pattern 8-neuron
 N = 8

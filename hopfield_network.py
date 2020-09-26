@@ -40,6 +40,7 @@ class HopfieldNetwork:
             for i in indices:
                 value_old = V[i]
                 value_new = np.sign(self.W[:, i].dot(V))
+                # value_new = sigmoid(self.W[:, i].dot(V))
                 if value_new != value_old:
                     V[i] = value_new
                     cnt += 1
@@ -49,6 +50,7 @@ class HopfieldNetwork:
                 # print("Converged in %s iterations" % iter)
                 break
             if iter > 1e3:
+                print("Reached maximum iteration", iter)
                 break
             iter += 1
 
@@ -95,21 +97,6 @@ class HopfieldNetwork:
         plt.show()
 
 
-f = open("pict.dat")
-raw_data = f.read().split(',')
-length = len(raw_data)
-N = int(length / 1024)
-data = np.zeros((1024, N))
-for i in range(length):
-    raw_data[i] = float(raw_data[i])
-data = np.array(raw_data).reshape((N, 1024))
-p1, p2, p3 = data[0], data[1], data[2]
-
-X = np.array([p1, p2, p3]).T
-model = HopfieldNetwork()
-model.train(X)
-
-
 def add_noise(arr: np.ndarray, ratio: float):
     """
     Randomly flip a selected number of units
@@ -129,6 +116,44 @@ def add_noise(arr: np.ndarray, ratio: float):
     return p
 
 
+def read_data(file_name):
+    f = open(file_name)
+    raw_data = f.read().split(',')
+    length = len(raw_data)
+    N = int(length / 1024)
+    for i in range(length):
+        raw_data[i] = float(raw_data[i])
+    data = np.array(raw_data).reshape((N, 1024))
+
+    return data
 
 
+def repair_degree(p1, p2):
+    return 1 - 0.5 * np.sum(np.abs(p1 - p2)) / 1024
 
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+
+model = HopfieldNetwork()
+data = read_data("pict.dat")
+
+log = []
+np.random.seed(5)
+X = np.sign(np.random.normal(0, 1, (100, 300)))
+for i in range(2, 300):
+    model.train(X[:, :i])
+    cnt = 0
+    for j in range(i - 1):
+        p = X[:, j]
+        rp = model.update_sync(p)
+        cnt += 1 if (p == rp).all() else 0
+    log.append(cnt)
+
+
+plt.plot(np.linspace(3, 300, 298), log)
+plt.xlabel("Number of learned patterns")
+plt.ylabel("Number of stable patterns")
+plt.title("Learning from random patterns")
+plt.show()

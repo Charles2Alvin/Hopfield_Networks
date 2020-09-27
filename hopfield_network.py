@@ -137,23 +137,14 @@ def sigmoid(x):
 
 
 model = HopfieldNetwork()
-data = read_data("pict.dat")
-
-log = []
-np.random.seed(5)
-X = np.sign(np.random.normal(0, 1, (100, 300)))
-for i in range(2, 300):
-    model.train(X[:, :i])
-    cnt = 0
-    for j in range(i - 1):
-        p = X[:, j]
-        rp = model.update_sync(p)
-        cnt += 1 if (p == rp).all() else 0
-    log.append(cnt)
-
-
-plt.plot(np.linspace(3, 300, 298), log)
-plt.xlabel("Number of learned patterns")
-plt.ylabel("Number of stable patterns")
-plt.title("Learning from random patterns")
-plt.show()
+N = 100  # number of units
+P = 20  # number of patterns
+p = 0.1
+ones = np.ones(int(p * N))
+zeros = np.zeros(N - int(p * N))
+x = np.concatenate((ones, zeros))
+X = []
+for i in range(P):
+    np.random.seed(P + i)
+    X.append(np.random.permutation(x))
+X = np.array(X).T

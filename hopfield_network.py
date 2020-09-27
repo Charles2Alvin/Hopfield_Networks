@@ -41,7 +41,7 @@ class HopfieldNetwork:
                 indices = np.random.permutation(indices)
             for i in indices:
                 value_old = V[i]
-                value_new = np.sign(self.W[:, i].dot(V))
+                value_new = 1 if self.W[:, i].dot(V) >= 0 else -1
                 if value_new != value_old:
                     V[i] = value_new
                     cnt += 1
@@ -71,7 +71,7 @@ class HopfieldNetwork:
             if log is not None:
                 e = self.energyOf(V)
                 log.append(e)
-            V_new = np.sign(self.W.dot(V))
+            V_new = sign(self.W.dot(V))
             V = V_new
             diff = np.sum(np.abs(V - V_new))
             if diff == 0:

@@ -6,9 +6,11 @@ class HopfieldNetwork:
     def __init__(self):
         self.W = None
 
-    def train(self, X: np.ndarray):
+    def train(self, X: np.ndarray, p_avg=0):
         M, N = len(X), len(X[0])
-        self.W = (1 / N) * X.dot(X.T)
+        avg = np.zeros((M, N))
+        avg.fill(p_avg)
+        self.W = (1 / N) * (X - avg).dot((X - avg).T)
         np.fill_diagonal(self.W, 0)
 
     def print_W(self):
@@ -40,7 +42,6 @@ class HopfieldNetwork:
             for i in indices:
                 value_old = V[i]
                 value_new = np.sign(self.W[:, i].dot(V))
-                # value_new = sigmoid(self.W[:, i].dot(V))
                 if value_new != value_old:
                     V[i] = value_new
                     cnt += 1
@@ -71,6 +72,27 @@ class HopfieldNetwork:
                 e = self.energyOf(V)
                 log.append(e)
             V_new = np.sign(self.W.dot(V))
+            V = V_new
+            diff = np.sum(np.abs(V - V_new))
+            if diff == 0:
+                break
+            iter += 1
+
+        return V
+
+    def update_slightly(self, p_start, bias, log: list = None):
+        V = np.copy(p_start)
+        N = len(V)
+        theta = np.zeros(N)
+        theta.fill(bias)
+        base = np.zeros(N)
+        base.fill(0.5)
+        iter = 1
+        while True:
+            if log is not None:
+                e = self.energyOf(V)
+                log.append(e)
+            V_new = base + 0.5 * sign(self.W.dot(V) - theta)
             V = V_new
             diff = np.sum(np.abs(V - V_new))
             if diff == 0:
@@ -129,22 +151,56 @@ def read_data(file_name):
 
 
 def repair_degree(p1, p2):
-    return 1 - 0.5 * np.sum(np.abs(p1 - p2)) / 1024
+    return 1 - 0.5 * np.sum(np.abs(p1 - p2)) / len(p1)
 
 
 def sigmoid(x):
     return 1 / (1 + np.exp(-x))
 
 
+def sign(nums: np.ndarray):
+    for i in range(nums.shape[0]):
+        nums[i] = 1 if nums[i] >= 0 else -1
+
+    return nums
+
+
+def sparse_pattern(N, P, p):
+    """
+    Generate sparse patterns
+    :param N: the number of units
+    :param P: the number of patterns
+    :param p: the activity
+    :return: sparse pattern matrix
+    """
+    ones = np.ones(int(p * N))
+    zeros = np.zeros(N - int(p * N))
+    base = np.concatenate((ones, zeros))
+    X = []
+    for i in range(P):
+        np.random.seed(P + i)
+        X.append(np.random.permutation(base))
+    X = np.array(X).T
+
+    return X
+
+
+N, P = 100, 20
 model = HopfieldNetwork()
-N = 100  # number of units
-P = 20  # number of patterns
-p = 0.1
-ones = np.ones(int(p * N))
-zeros = np.zeros(N - int(p * N))
-x = np.concatenate((ones, zeros))
-X = []
-for i in range(P):
-    np.random.seed(P + i)
-    X.append(np.random.permutation(x))
-X = np.array(X).T
+X = sparse_pattern(N, P, 0.1)
+model.train(X)
+
+cnt_list = []
+theta_list = np.linspace(0, 1, 11)
+for theta in theta_list:
+    cnt = 0
+    accuracy = []
+    for i in range(P):
+        x = X[:, i]
+        rp = model.update_slightly(x,  bias=theta)
+        accuracy.append(repair_degree(x, rp))
+        cnt += 1 if (x == rp).all() else 0
+    cnt_list.append(cnt)
+    print("bias term theta = %.2f, stored patterns = %s" % (theta, cnt))
+
+
